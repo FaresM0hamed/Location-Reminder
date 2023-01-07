@@ -1,8 +1,20 @@
 package com.udacity.project4.locationreminders.savereminder.selectreminderlocation
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.net.Uri
+import android.os.Build
 import com.udacity.project4.R
 import android.os.Bundle
+import android.provider.Settings
 import android.view.*
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.udacity.project4.base.BaseFragment
 import com.google.android.gms.location.*
@@ -10,6 +22,9 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
+import com.udacity.project4.BuildConfig
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
@@ -21,6 +36,9 @@ class SelectLocationFragment : BaseFragment() , OnMapReadyCallback {
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var map: GoogleMap
+    private lateinit var activityResultLauncherPermissions: ActivityResultLauncher<Array<String>>
+    private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -43,9 +61,41 @@ class SelectLocationFragment : BaseFragment() , OnMapReadyCallback {
 
 
 //        TODO: call this function after the user confirms on the selected location
+
+        activityResultLauncherPermissions =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+                if (result.all { result -> result.value }) {
+                    //granted
+                    getUserLocation()
+                } else {
+                    //not granted
+                    Snackbar.make(
+                        requireView(),
+                        R.string.permission_denied_explanation, Snackbar.LENGTH_LONG
+                    )
+                        .setAction(R.string.settings) {
+                            // Displays App settings screen.
+                            startActivity(Intent().apply {
+                                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            })
+                        }.show()
+                }
+            }
         onLocationSelected()
 
         return binding.root
+    }
+
+    private fun getUserLocation() {
+
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        checkPermission()
     }
 
     private fun onLocationSelected() {
@@ -88,5 +138,96 @@ class SelectLocationFragment : BaseFragment() , OnMapReadyCallback {
         )
     }
 
+    /** Handle Foreground Location permissions **/
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun checkPermission() {
+        if (checkDeviceGPS()) {
+            checkPermissionsThenGetUserLocation()
+        }
+    }
+
+    /**
+     * Check if device enable gps or not
+     */
+    private fun checkDeviceGPS(): Boolean {
+        val locationManager = requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            MaterialAlertDialogBuilder(requireActivity())
+                .setMessage("Please enable gps to could get your location")
+                .setPositiveButton(
+                    "Enable GPS"
+                ) { _, _ ->
+                    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    requireActivity().startActivity(intent)
+                }
+                .setCancelable(false)
+                .show()
+            return false
+        }
+        return true
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun checkPermissionsThenGetUserLocation() {
+            if (foregroundLocationPermissionApproved()) {
+                getUserLocation()
+            } else {
+                if (!foregroundLocationPermissionApproved()) {
+                    requestForegroundLocationPermissions()
+                }
+                if (foregroundLocationPermissionApproved()) {
+                    getUserLocation()
+                }
+            }
+
+    }
+
+    /** Handle Background Location permissions to work on android 10 and more **/
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun requestForegroundLocationPermissions() {
+        when {
+            foregroundLocationPermissionApproved() -> {
+                return
+            }
+            requireActivity().shouldShowRequestPermissionRationale(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) -> {
+                Snackbar.make(
+                    requireView(),
+                    R.string.permission_denied_explanation, Snackbar.LENGTH_LONG
+                )
+                    .setAction(R.string.settings) {
+                        // Displays App settings screen.
+                        requireActivity().startActivity(Intent().apply {
+                            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        })
+                    }.show()
+            }
+            else -> {
+                activityResultLauncherPermissions.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        }
+    }
+
+
+    private fun foregroundLocationPermissionApproved(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            requireActivity(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(
+            requireActivity(),
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
 
 }
