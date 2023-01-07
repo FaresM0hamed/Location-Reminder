@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.savereminder.selectreminderlocation
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.udacity.project4.base.BaseFragment
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
@@ -29,6 +31,7 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
 
 class SelectLocationFragment : BaseFragment() , OnMapReadyCallback {
 
@@ -37,8 +40,8 @@ class SelectLocationFragment : BaseFragment() , OnMapReadyCallback {
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var map: GoogleMap
     private lateinit var activityResultLauncherPermissions: ActivityResultLauncher<Array<String>>
-    private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-
+    private var isUserLocationObtained = false
+    private var marker: Marker? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -55,12 +58,7 @@ class SelectLocationFragment : BaseFragment() , OnMapReadyCallback {
         val mapFragment =
             childFragmentManager.findFragmentById(R.id.mapView) as SupportMapFragment
         mapFragment.getMapAsync(this)
-//        TODO: zoom to the user location after taking his permission
-//        TODO: add style to the map
 //        TODO: put a marker to location that the user selected
-
-
-//        TODO: call this function after the user confirms on the selected location
 
         activityResultLauncherPermissions =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
@@ -88,14 +86,43 @@ class SelectLocationFragment : BaseFragment() , OnMapReadyCallback {
         return binding.root
     }
 
-    private fun getUserLocation() {
-
-    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         checkPermission()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getUserLocation() {
+        if (!isUserLocationObtained) {
+            val mLocationRequest: LocationRequest = LocationRequest.create()
+            mLocationRequest.interval = 2000
+            mLocationRequest.fastestInterval = 2000
+            mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            val mLocationCallback: LocationCallback = object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    for (location in locationResult.locations) {
+                        if (location != null && !isUserLocationObtained) {
+                            val userLocation = LatLng(location.latitude, location.longitude)
+                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 30f))
+                            marker = map.addMarker(
+                                MarkerOptions().position(userLocation).title("Current Location")
+                            )
+                            marker?.showInfoWindow()
+                            isUserLocationObtained = true
+                        }
+                    }
+                }
+            }
+            LocationServices.getFusedLocationProviderClient(requireActivity())
+                .requestLocationUpdates(
+                    mLocationRequest,
+                    mLocationCallback,
+                    requireActivity().mainLooper
+                )
+        }
+
     }
 
     private fun onLocationSelected() {
@@ -136,6 +163,38 @@ class SelectLocationFragment : BaseFragment() , OnMapReadyCallback {
         map.setMapStyle(
             MapStyleOptions.loadRawResourceStyle(requireContext(), R.raw.map_style)
         )
+
+        //setup the POI click when user click on map to add marker
+        map.setOnPoiClickListener { poi ->
+            map.clear()
+            marker = map.addMarker(
+                MarkerOptions()
+                    .position(poi.latLng)
+                    .title("Location")
+            )
+            marker?.showInfoWindow()
+            map.animateCamera(CameraUpdateFactory.newLatLng(poi.latLng))
+        }
+
+        //setup the long click when user click on map to add marker
+        map.setOnMapLongClickListener { latLng ->
+            val snippet = String.format(
+                Locale.getDefault(),
+                "Lat: %1$.5f, Long: %2$.5f",
+                latLng.latitude,
+                latLng.longitude
+            )
+            map.clear()
+            marker = map.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+                    .title("Location")
+                    .snippet(snippet)
+            )
+            marker?.showInfoWindow()
+            map.animateCamera(CameraUpdateFactory.newLatLng(latLng))
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 25f))
+        }
     }
 
     /** Handle Foreground Location permissions **/
