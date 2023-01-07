@@ -1,0 +1,59 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext.kotlinVersion = '1.5.21'
+    ext.navigationVersion = "2.5.3"
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.2.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$navigationVersion"
+        classpath 'com.google.gms:google-services:4.3.14'
+        classpath "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+ext {
+    // App dependencies
+    androidXVersion = '1.0.0'
+    androidXAnnotations = '1.5.0'
+    androidXLegacySupport = '1.0.0'
+    appCompatVersion = '1.5.1'
+    archLifecycleVersion = '2.5.1'
+    lifecycleVersionExtenstions = '2.2.0'
+    cardVersion = '1.0.0'
+    materialVersion = '1.7.0'
+    fragmentVersion = '1.6.0-alpha03'
+    recyclerViewVersion = '1.2.1'
+    mockitoVersion = '3.12.4'
+    constraintVersion = '2.2.0-alpha04'
+    dexMakerVersion = '2.12.1'
+    coroutinesVersion = '1.6.4'
+    roomVersion = '2.4.3'
+    koinVersion = '3.2.2'
+    truthVersion = '1.1.3'
+    junitVersion = '4.13.2'
+    androidXTestCoreVersion = '1.5.0'
+    robolectricVersion = '4.9'
+    androidXTestExtKotlinRunnerVersion = '1.1.4'
+    archTestingVersion = '2.1.0'
+    playServicesVersionMaps = '18.1.0'
+    playServicesVersionLocation = '21.0.1'
+    hamcrestVersion = '1.3'
+    androidXTestRulesVersion = '1.5.0'
+    espressoVersion = '3.5.0'
+}

@@ -1,0 +1,2 @@
+rootProject.name = "Location Reminder"
+include ':app'
