@@ -27,7 +27,7 @@ class RemindersLocalRepositoryTest {
 
     private lateinit var localDataSource: RemindersLocalRepository
     private lateinit var database: RemindersDatabase
-    private val shopReminder =
+    private val reminder =
         ReminderDTO(
             "reminder title", "reminder Description", "egypt",
             5.0, 3.0
@@ -85,18 +85,18 @@ class RemindersLocalRepositoryTest {
     @Test
     fun saveReminder_ReturnReminderByID() = runTest {
         // GIVEN - A new reminder saved in the database.
-        database.reminderDao().saveReminder(shopReminder)
+        database.reminderDao().saveReminder(reminder)
 
         // WHEN  - Task retrieved by ID.
-        val result = localDataSource.getReminder(shopReminder.id)
+        val result = localDataSource.getReminder(reminder.id)
 
         // THEN - Same task is returned.
         result as Result.Success
         MatcherAssert.assertThat(result.data.title, Is.`is`("reminder title"))
         MatcherAssert.assertThat(result.data.description, Is.`is`("reminder Description"))
-        MatcherAssert.assertThat(result.data.location, Is.`is`(shopReminder.location))
-        MatcherAssert.assertThat(result.data.longitude, Is.`is`(shopReminder.longitude))
-        MatcherAssert.assertThat(result.data.latitude, Is.`is`(shopReminder.latitude))
+        MatcherAssert.assertThat(result.data.location, Is.`is`(reminder.location))
+        MatcherAssert.assertThat(result.data.longitude, Is.`is`(reminder.longitude))
+        MatcherAssert.assertThat(result.data.latitude, Is.`is`(reminder.latitude))
     }
 
 
