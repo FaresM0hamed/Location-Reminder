@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="viewModel"
             type="com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel" />
@@ -60,12 +61,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/margin_normal"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_add"
                 app:fabSize="normal"
                 app:layout_anchor="@id/reminderssRecyclerView"
                 app:layout_anchorGravity="bottom|right|end"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:ignore="SpeakableTextPresentCheck" />
         </androidx.constraintlayout.widget.ConstraintLayout>
+
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </layout>

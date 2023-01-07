@@ -5,8 +5,13 @@
       <map>
         <entry key="..\:/Android_studio_projects/Project4/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.1645" />
         <entry key="..\:/Android_studio_projects/Project4/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1645" />
+        <entry key="..\:/Android_studio_projects/Project4/app/src/main/res/layout/activity_authentication.xml" value="0.26875" />
         <entry key="..\:/Android_studio_projects/Project4/app/src/main/res/layout/activity_main.xml" value="0.26458333333333334" />
+        <entry key="..\:/Android_studio_projects/Project4/app/src/main/res/layout/activity_reminders.xml" value="0.26875" />
+        <entry key="..\:/Android_studio_projects/Project4/app/src/main/res/layout/fragment_reminders.xml" value="0.26875" />
         <entry key="..\:/Android_studio_projects/Project4/app/src/main/res/layout/it_reminder.xml" value="0.26458333333333334" />
+        <entry key="..\:/Android_studio_projects/Project4/app/src/main/res/menu/main_menu.xml" value="0.26875" />
+        <entry key="..\:/Android_studio_projects/Project4/app/src/main/res/menu/map_options.xml" value="0.26875" />
       </map>
     </option>
   </component>
